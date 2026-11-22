@@ -19,7 +19,7 @@
 import { BRAND_NAME } from '../config/Identity';
 
 /** Intrinsic size of `public/img/brand-mark.png`. */
-export const MARK_SRC = '/img/brand-mark.png';
+export const MARK_SRC = '/img/brand-mark.png?v=2';
 
 export function Logo({
   size = 26,

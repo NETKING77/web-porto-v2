@@ -6,7 +6,7 @@ import Layout from './components/Layout';
 import Home from './pages/Home';
 import Projects from './pages/Projects';
 import Career from './pages/Career';
-import NotFound from './pages/NotFound';
+import Upclose404 from './components/Upclose404';
 import './styles/site.css';
 
 /**
@@ -37,9 +37,9 @@ const router = createBrowserRouter([
         path: 'contact',
         lazy: async () => ({ Component: (await import('./pages/Contact')).default }),
       },
-      { path: '*', element: <NotFound /> },
     ],
   },
+  { path: '*', element: <Upclose404 /> },
 ]);
 
 createRoot(document.getElementById('root')!).render(

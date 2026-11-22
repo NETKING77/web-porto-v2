@@ -107,7 +107,7 @@ export const RESUME = {
 } as const;
 
 /** Portrait image path. */
-export const PORTRAIT_IMAGE = '/icon.webp';
+export const PORTRAIT_IMAGE = '/icon.webp?v=2';
 
 /** Company / business brand details. */
 export const COMPANY = {
@@ -117,7 +117,7 @@ export const COMPANY = {
   educationUrl: 'https://education.iarty.biz.id',
   marketplaceUrl: 'https://marketplace.iarty.biz.id',
   templatesUrl: 'https://iarty.biz.id/templates',
-  image: '/img/iarty.webp',
+  image: '/img/ggstore.webp?v=2',
 } as const;
 
 /** Build a wa.me link for the configured number. */
