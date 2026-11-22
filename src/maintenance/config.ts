@@ -24,7 +24,7 @@ export interface MaintenanceConfig {
 }
 
 export const MAINTENANCE_CONFIG: MaintenanceConfig = {
-  enabled: false, /** Untuk aktif/nonaktifkan maintenance */
+  enabled: true, /** Untuk aktif/nonaktifkan maintenance */
   targetDate: '2028-01-01T00:00:00+07:00',
   badge: {
     en: 'Scheduled Maintenance',
