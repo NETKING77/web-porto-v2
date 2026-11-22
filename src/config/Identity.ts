@@ -14,23 +14,23 @@
  * it only appears in the About section ("previously known as …"), inside the
  * résumé PDFs, and — for machine-readable identity only — in structured data.
  */
-export const BRAND_NAME = 'FIQTOR';
+export const BRAND_NAME = 'ANDRI';
 
 /** Public display name. This is the name shown to visitors. */
-export const OWNER_NAME = 'FIQTOR';
+export const OWNER_NAME = 'Andri Setiyanto';
 
 /** Legal name. Rendered ONLY in the About section and in structured data. */
-export const LEGAL_NAME = 'Taufiiqul Hakim';
+export const LEGAL_NAME = 'Andri Setiyanto';
 
 /** Owner's online alias / handle (without the leading @). */
-export const OWNER_ALIAS = 'FIQTOR';
+export const OWNER_ALIAS = 'NETKING77';
 
 /** Job title / role. */
 export const JOB_TITLE = 'AI & Software Engineer';
 
 /** Short headline / tagline used in metadata. */
 export const HEADLINE =
-  'FIQTOR is an AI and software engineer from Indonesia building full stack web applications, AI automation, and business systems.';
+  'Andri Setiyanto is an AI and software engineer from Indonesia building full stack web applications, AI automation, and business systems.';
 
 /** Years of professional experience. */
 export const YEARS_OF_EXPERIENCE = 5;
@@ -49,12 +49,12 @@ export const COUNTRY_CODE = 'ID';
 export const LANGUAGES = ['English', 'Bahasa Indonesia'];
 
 /** Founder of the company below — used for credentials and "known as". */
-export const FOUNDER_OF = 'IARTY';
+export const FOUNDER_OF = 'GGStore.Id';
 
 /** Public contact email. */
-export const CONTACT_EMAIL = 'contact@fiqtor.com';
+export const CONTACT_EMAIL = 'andrisetiyanto18@gmail.com';
 /** Secondary / business email. */
-export const BUSINESS_EMAIL = 'business@fiqtor.com';
+export const BUSINESS_EMAIL = 'andrisetiyanto18@gmail.com';
 
 /** Public phone (E.164). */
 export const CONTACT_PHONE = '+6281617262908';
@@ -73,26 +73,26 @@ export const TWITTER_HANDLE = '@fiqtor';
  * inert: the value is injected into `<head>` by `src/config/Seo.ts` and loaded
  * by `src/lib/analytics.ts`. Set `VITE_GA_ID=` to an empty string to disable.
  */
-export const GA_MEASUREMENT_ID = 'G-FTJ2LRGE5P';
+export const GA_MEASUREMENT_ID = 'G-'; /** belum di isi */
 
 /** Canonical site origin (no trailing slash). */
 export const SITE_ORIGIN = 'https://fiqtor.pages.dev';
 
 /** Social profile URLs. */
 export const SOCIAL_LINKS = {
-  instagram: 'https://www.instagram.com/fiqtorr/',
-  tiktok: 'https://www.tiktok.com/@fiqtor',
-  youtube: 'https://www.youtube.com/@fiqtor',
-  linkedin: 'https://www.linkedin.com/in/fiqtor',
-  github: 'https://github.com/fiqtor',
-  threads: 'https://www.threads.net/@fiqtorr',
+  instagram: 'https://www.instagram.com/lexxy_z7/',
+  tiktok: 'https://www.tiktok.com/@-',
+  youtube: 'https://www.youtube.com/@-',
+  linkedin: 'https://www.linkedin.com/in/andri-setiyanto',
+  github: 'https://github.com/NETKING77',
+  threads: 'https://www.threads.net/@-',
 } as const;
 
 /** GitHub username (public — tokens stay on the backend). */
-export const GITHUB_USERNAME = 'FIQTOR';
+export const GITHUB_USERNAME = 'NETKING77';
 
 /** WakaTime username (public — the API key stays on the backend). */
-export const WAKATIME_USERNAME = 'FIQTOR';
+export const WAKATIME_USERNAME = 'Andri Setiyanto';
 
 /** Timezone used by the footer clock. */
 export const TIMEZONE = 'Asia/Jakarta';
@@ -111,8 +111,8 @@ export const PORTRAIT_IMAGE = '/icon.webp';
 
 /** Company / business brand details. */
 export const COMPANY = {
-  name: 'IARTY',
-  url: 'https://iarty.biz.id',
+  name: 'GGStore.Id',
+  url: 'https://ggstore.biz.id',
   aiUrl: 'https://ai.iarty.biz.id',
   educationUrl: 'https://education.iarty.biz.id',
   marketplaceUrl: 'https://marketplace.iarty.biz.id',

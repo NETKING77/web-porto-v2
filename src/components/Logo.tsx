@@ -16,6 +16,8 @@
  *     inversion.
  */
 
+import { BRAND_NAME } from '../config/Identity';
+
 /** Intrinsic size of `public/img/brand-mark.png`. */
 export const MARK_SRC = '/img/brand-mark.png';
 
@@ -53,7 +55,7 @@ export function Brand({ size = 26, mark = false }: { size?: number; mark?: boole
   return (
     <>
       {mark && <Logo size={size} className="brand-mark" />}
-      <span className="brand-txt">FIQTOR</span>
+      <span className="brand-txt">{BRAND_NAME}</span>
     </>
   );
 }

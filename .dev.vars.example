@@ -1,7 +1,50 @@
-# Local development secrets for Cloudflare Workers / Pages Functions (wrangler pages dev)
+# ==============================================================================
+# Local Development Secrets for Cloudflare Pages Functions (wrangler pages dev)
+# ==============================================================================
+#
+# HOW TO USE:
+#   1. Copy this file to `.dev.vars` in the project root:
+#        cp .dev.vars.example .dev.vars
+#   2. Fill in only the keys for the integrations you want to test locally.
+#      Leave unused variables empty — unconfigured endpoints degrade gracefully.
+#   3. Build and run locally with Cloudflare Pages Functions:
+#        npm run build && npm run preview:cf
+#      (`wrangler pages dev ./dist` automatically loads `.dev.vars`.)
+#
+# SECURITY:
+#   - `.dev.vars` is listed in `.gitignore`. NEVER commit real secrets to git.
+#   - NEVER put these keys in `.env` (`VITE_*` vars are exposed in client bundles).
+#
+# PRODUCTION (Cloudflare Pages):
+#   Configure these same variables in:
+#     Cloudflare Dashboard -> Workers & Pages -> <your-project> ->
+#     Settings -> Variables and Secrets (store API keys/tokens as Secrets).
+# ==============================================================================
+
+# --- AI Assistant (POST /api/v1/ai/generate) ----------------------------------
+# Google Gemini API key (optional — AI chat falls back gracefully if empty)
+# Get yours at: https://aistudio.google.com/apikey
 GEMINI_API_KEY=
-AI_MODEL_PRIMARY=gemini-2.5-flash-lite
+
+# Primary Gemini model ID override (optional — default: gemini-3.5-flash-lite)
+AI_MODEL_PRIMARY=
+
+# --- GitHub Contributions (GET /api/v1/github/contributions) ------------------
+# GitHub Personal Access Token for GraphQL API (optional — needs `read:user`)
+# Create one at: https://github.com/settings/tokens
 GITHUB_TOKEN=
-GITHUB_USERNAME=FIQTOR
+
+# GitHub username for the contribution calendar (optional — default: FIQTOR)
+GITHUB_USERNAME=
+
+# --- WakaTime Stats (GET /api/v1/wakatime) ------------------------------------
+# WakaTime secret API key or full `Basic ...` / `Bearer ...` header (optional;
+# used as fallback when public profile stats are unavailable)
+# Find yours at: https://wakatime.com/settings/api-key
 WAKATIME_APP_SECRET=
+
+# --- Crypto Prices (GET /api/v1/crypto) ---------------------------------------
+# CoinGecko Demo API key sent via `x-cg-demo-api-key` (optional — improves rate
+# limits; public tier & static fallback work without a key)
+# Get a free demo key at: https://www.coingecko.com/en/api
 COINGECKO_API_KEY=

@@ -552,12 +552,12 @@ const careerRaw: CareerItem[] = [
     website: COMPANY.url,
     logo: COMPANY.image,
     desc: {
-      en: 'Built and scaled the IARTY ecosystem across education, AI, digital products, and services — leading end-to-end business strategy, product development, marketing, and operations.',
-      id: 'Membangun dan mengembangkan ekosistem IARTY di bidang pendidikan, AI, produk digital, dan layanan, sekaligus memimpin strategi bisnis dari hulu ke hilir, pengembangan produk, pemasaran, dan operasional.',
-      zh: '创立并全面扩展涵盖教育培训、AI 解决方案、数字产品与企业级软件服务的 IARTY 商业生态系统 — 主导端到端商业战略规划、产品研发迭代、品牌营销与日常运营。',
+      en: `Built and scaled the ${COMPANY.name} ecosystem across education, AI, digital products, and services — leading end-to-end business strategy, product development, marketing, and operations.`,
+      id: `Membangun dan mengembangkan ekosistem ${COMPANY.name} di bidang pendidikan, AI, produk digital, dan layanan, sekaligus memimpin strategi bisnis dari hulu ke hilir, pengembangan produk, pemasaran, dan operasional.`,
+      zh: `创立并全面扩展涵盖教育培训、AI 解决方案、数字产品与企业级软件服务的 ${COMPANY.name} 商业生态系统 — 主导端到端商业战略规划、产品研发迭代、品牌营销与日常运营。`,
     },
     points: [
-      { en: 'Shipped the IARTY ecosystem: website, IARTY AI, education, and marketplace.', id: 'Merilis ekosistem IARTY: website, IARTY AI, education, dan marketplace.', zh: '成功交付并上线 IARTY 全套产品生态：官网门户、IARTY AI 智能助手、在线学院与数字交易平台。' },
+      { en: `Shipped the ${COMPANY.name} ecosystem: website, ${COMPANY.name} AI, education, and marketplace.`, id: `Merilis ekosistem ${COMPANY.name}: website, ${COMPANY.name} AI, education, dan marketplace.`, zh: `成功交付并上线 ${COMPANY.name} 全套产品生态：官网门户、${COMPANY.name} AI 智能助手、在线学院与数字交易平台。` },
       { en: 'Built AI-powered products and automation for real business workflows.', id: 'Membangun produk bertenaga AI dan otomasi untuk alur kerja bisnis nyata.', zh: '研发基于先进大语言模型的落地 AI 产品与业务自动化流，赋能真实商业生产力。' },
       { en: 'Grew a multi-platform presence (Instagram, TikTok, YouTube, Threads) with tech-focused content.', id: 'Menumbuhkan kehadiran multi-platform (Instagram, TikTok, YouTube, Threads) dengan konten bertema teknologi.', zh: '建立并运营跨平台技术影响力矩阵（Instagram、TikTok、YouTube、Threads），持续输出前沿技术干货。' },
       { en: 'Produced educational content for academy.iarichty, simplifying complex tech and AI topics.', id: 'Memproduksi konten edukatif untuk academy.iarichty, menyederhanakan topik teknologi dan AI yang rumit.', zh: '为 academy.iarichty 研发系统化实战教程，将复杂的软件工程与 AI 概念深入浅出地传递给学员。' },
@@ -1211,7 +1211,7 @@ export const S: SiteConfig = {
   ],
 
   hubs: [
-    { label: { en: 'Official Website', id: 'Situs Resmi', zh: '官方网站' }, domain: 'iarty.biz.id', href: COMPANY.url, image: COMPANY.image },
+    { label: { en: 'Official Website', id: 'Situs Resmi', zh: '官方网站' }, domain: 'ggstore.biz.id', href: COMPANY.url, image: COMPANY.image },
     { label: { en: 'IARTY AI', id: 'IARTY AI', zh: 'IARTY AI' }, domain: 'ai.iarty.biz.id', href: COMPANY.aiUrl, image: COMPANY.image },
     { label: { en: 'Marketplace', id: 'Marketplace', zh: '产品市场' }, domain: 'marketplace.iarty.biz.id', href: COMPANY.marketplaceUrl, image: COMPANY.image },
   ],

@@ -702,9 +702,9 @@ export function HomeSections() {
             </p>
             <p className="about-aka rv">
               {t(
-                'On every platform the name is simply FIQTOR; Taufiiqul Hakim is the name that appears on certificates and official documents.',
-                'Di semua platform namanya cukup FIQTOR; Taufiiqul Hakim adalah nama yang tercantum pada sertifikat dan dokumen resmi.',
-                '在所有平台上名称都是 FIQTOR, Taufiiqul Hakim 是出现在证书和官方文件上的名字.',
+                `On every platform the name is simply ${S.name}; ${S.legalName} is the name that appears on certificates and official documents.`,
+                `Di semua platform namanya cukup ${S.name}; ${S.legalName} adalah nama yang tercantum pada sertifikat dan dokumen resmi.`,
+                `在所有平台上名称都是 ${S.name}, ${S.legalName} 是出现在证书和官方文件上的名字.`,
               )}
             </p>
             <Link className="btn2 rv" to="/career" style={{ display: 'inline-block', marginTop: '1.4rem' }}>
@@ -749,9 +749,9 @@ export function HomeSections() {
               </h4>
               <p>
                 {t(
-                  'IARTY: websites, apps, AI, education, and a marketplace. Built and run in-house.',
-                  'IARTY: website, aplikasi, AI, edukasi, dan marketplace. Dibangun dan dikelola sendiri.',
-                  'IARTY: 网站, 应用, AI, 教育和市场. 自主构建和运营.',
+                  `${S.company.name}: websites, apps, AI, education, and a marketplace. Built and run in-house.`,
+                  `${S.company.name}: website, aplikasi, AI, edukasi, dan marketplace. Dibangun dan dikelola sendiri.`,
+                  `${S.company.name}: 网站, 应用, AI, 教育和市场. 自主构建和运营.`,
                 )}
               </p>
             </div>

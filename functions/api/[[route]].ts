@@ -7,6 +7,8 @@ import {
   HEADLINE,
   COMPANY,
   SOCIAL_LINKS,
+  GITHUB_USERNAME,
+  WAKATIME_USERNAME,
 } from '../../src/config/Identity';
 
 export interface Env {
@@ -87,6 +89,7 @@ Your job:
 - Answer questions about ${BRAND_NAME}'s skills, background, and work.
 - Help visitors understand their technical projects and expertise.
 - Be concise, professional, and tech-savvy.
+- FORMATTING (STRICT): Reply in clean PLAIN TEXT only. NEVER use Markdown formatting symbols (such as **, *, #, \`, ~, or >) and NEVER use emojis, icons, or decorative symbols.
 - LANGUAGE ADAPTATION: You MUST always detect and respond in the EXACT SAME LANGUAGE as the user's prompt or preferred language (e.g. if the user writes in Chinese / Mandarin, reply in fluent, natural Simplified Chinese; if in Indonesian, reply in Bahasa Indonesia; if in English, reply in English).
 `;
 
@@ -170,7 +173,7 @@ app.post('/v1/ai/generate', async (c) => {
     }
   }
 
-  const apiKey = env.GEMINI_API_KEY;
+  const apiKey = env.GEMINI_API_KEY?.trim().replace(/^['"]|['"]$/g, '');
   if (!apiKey) {
     return new Response(
       `data: ${JSON.stringify({ status: 'failed', text: 'AI key not configured on server.' })}\n\ndata: [DONE]\n\n`,
@@ -180,7 +183,19 @@ app.post('/v1/ai/generate', async (c) => {
     );
   }
 
-  const model = env.AI_MODEL_PRIMARY || 'gemini-2.5-flash-lite';
+  const cleanModelId = (raw?: string): string =>
+    (raw ?? '')
+      .trim()
+      .replace(/^['"]|['"]$/g, '')
+      .replace(/^models\//i, '')
+      .toLowerCase()
+      .replace(/\s+/g, '-');
+
+  const configuredModel = cleanModelId(env.AI_MODEL_PRIMARY);
+  const primaryModel =
+    /^[a-z0-9][a-z0-9._-]*$/.test(configuredModel) && configuredModel !== 'gemini-2.5-flash-lite'
+      ? configuredModel
+      : 'gemini-3.5-flash-lite';
 
   // Construct Gemini REST contents
   const contents: Array<{ role: string; parts: Array<Record<string, unknown>> }> = [
@@ -242,61 +257,173 @@ app.post('/v1/ai/generate', async (c) => {
 
   contents.push({ role: 'user', parts: userParts });
 
-  const geminiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`;
+  const callGeminiStream = (targetModel: string) =>
+    fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:streamGenerateContent?alt=sse&key=${encodeURIComponent(apiKey)}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents }),
+        signal: AbortSignal.timeout(12000),
+      },
+    );
+
+  const extractGoogleError = (rawText: string): string => {
+    try {
+      const parsed = JSON.parse(rawText) as { error?: { message?: string } | Array<{ error?: { message?: string } }> };
+      if (Array.isArray(parsed)) return parsed[0]?.error?.message ?? '';
+      return (parsed.error as { message?: string } | undefined)?.message ?? '';
+    } catch {
+      return rawText.slice(0, 160);
+    }
+  };
+
+  const scoreModel = (id: string): number => {
+    if (id === 'gemini-3.5-flash-lite') return 1000;
+    if (id === 'gemini-flash-lite-latest') return 950;
+    const verMatch = id.match(/gemini-(\d+(?:\.\d+)?)/);
+    const ver = verMatch ? parseFloat(verMatch[1]) : id.includes('latest') ? 3.5 : 1.0;
+    let score = ver * 100;
+    if (/flash/i.test(id)) score += 30;
+    if (/lite/i.test(id) && ver >= 3) score += 25;
+    if (!/exp|001|002|8b|customtools|preview/i.test(id)) score += 15;
+    if (/latest$/i.test(id)) score += 20;
+    return score;
+  };
 
   try {
-    const upstreamRes = await fetch(geminiEndpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents }),
-    });
+    let upstreamRes = await callGeminiStream(primaryModel);
+    let lastStatus = upstreamRes.status;
+    let lastErrorMsg = '';
+
+    if (!upstreamRes.ok) {
+      // Always consume failed response body so Cloudflare workerd never stalls subsequent fetches
+      const errRaw = await upstreamRes.text().catch(() => '');
+      lastErrorMsg = extractGoogleError(errRaw);
+      console.warn(`[AI] model=${primaryModel} status=${lastStatus} error=${lastErrorMsg}`);
+
+      if (lastStatus === 404 || lastStatus === 400 || lastStatus === 429 || lastStatus === 503) {
+        let fallbackCandidates: string[] = [
+          'gemini-3.5-flash-lite',
+          'gemini-flash-lite-latest',
+          'gemini-3.5-flash',
+          'gemini-flash-latest',
+        ].filter((m) => m !== primaryModel);
+        try {
+          const listRes = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(apiKey)}`,
+            { signal: AbortSignal.timeout(6000) },
+          );
+          if (listRes.ok) {
+            const listJson = (await listRes.json()) as {
+              models?: Array<{ name?: string; supportedGenerationMethods?: string[] }>;
+            };
+            const discovered = (listJson.models ?? [])
+              .filter(
+                (m) =>
+                  m.name &&
+                  m.supportedGenerationMethods?.includes('generateContent') &&
+                  !/embedding|imagen|veo|aqa|tts|audio|image|robotics|computer-use|learnlm|gemma/i.test(m.name),
+              )
+              .map((m) => m.name!.replace(/^models\//, ''))
+              .filter((m) => m !== primaryModel)
+              .sort((a, b) => scoreModel(b) - scoreModel(a));
+            if (discovered.length > 0) {
+              fallbackCandidates = Array.from(new Set([...discovered.slice(0, 4), ...fallbackCandidates])).slice(0, 4);
+            }
+          } else {
+            const listErr = await listRes.text().catch(() => '');
+            console.warn(`[AI] models.list status=${listRes.status} error=${extractGoogleError(listErr)}`);
+          }
+        } catch {
+          // Use default fallbackCandidates if discovery fails
+        }
+
+        for (const candidate of fallbackCandidates) {
+          upstreamRes = await callGeminiStream(candidate);
+          lastStatus = upstreamRes.status;
+          if (upstreamRes.ok && upstreamRes.body) {
+            console.info(`[AI] succeeded with fallback model=${candidate}`);
+            break;
+          }
+          const fbErr = await upstreamRes.text().catch(() => '');
+          lastErrorMsg = extractGoogleError(fbErr) || lastErrorMsg;
+          console.warn(`[AI] fallback model=${candidate} status=${lastStatus} error=${lastErrorMsg}`);
+          if (lastStatus !== 404 && lastStatus !== 400 && lastStatus !== 429 && lastStatus !== 503) break;
+        }
+      }
+    }
 
     if (!upstreamRes.ok || !upstreamRes.body) {
+      if (lastStatus === 429) {
+        return c.json({ status: 'failed', error: 'Rate limit reached' }, 429);
+      }
+      const detail = lastErrorMsg ? ` (${lastErrorMsg})` : '';
       return new Response(
-        `data: ${JSON.stringify({ status: 'failed', text: `AI service unavailable: ${upstreamRes.status}` })}\n\ndata: [DONE]\n\n`,
+        `data: ${JSON.stringify({ status: 'failed', text: `AI service unavailable: ${lastStatus}${detail}` })}\n\ndata: [DONE]\n\n`,
         { headers: { 'Content-Type': 'text/event-stream; charset=utf-8' } },
       );
     }
 
-    const { readable, writable } = new TransformStream();
-    const writer = writable.getWriter();
     const encoder = new TextEncoder();
     const decoder = new TextDecoder();
+    const reader = upstreamRes.body.getReader();
+    let buffer = '';
 
-    // Stream transformation from Google SSE to client SSE
-    (async () => {
-      const reader = upstreamRes.body!.getReader();
-      let buffer = '';
+    const extractAndEnqueue = (line: string, controller: ReadableStreamDefaultController<Uint8Array>) => {
+      const trimmed = line.trim();
+      if (!trimmed.startsWith('data:')) return;
+      const jsonStr = trimmed.slice(5).trim();
+      if (!jsonStr || jsonStr === '[DONE]') return;
       try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split('\n');
-          buffer = lines.pop() || '';
-
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              const jsonStr = line.slice(6).trim();
-              if (!jsonStr) continue;
-              try {
-                const parsed = JSON.parse(jsonStr);
-                const text = parsed?.candidates?.[0]?.content?.parts?.[0]?.text;
-                if (text) {
-                  await writer.write(encoder.encode(`data: ${JSON.stringify({ text })}\n\n`));
-                }
-              } catch {}
+        const parsed = JSON.parse(jsonStr);
+        const parts = parsed?.candidates?.[0]?.content?.parts;
+        if (Array.isArray(parts)) {
+          for (const part of parts) {
+            if (part && !part.thought && typeof part.text === 'string' && part.text) {
+              const cleanText = part.text.replace(/\*\*|__|`/g, '').replace(/^#{1,6}\s+/gm, '');
+              if (cleanText) {
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: cleanText })}\n\n`));
+              }
             }
           }
         }
-        await writer.write(encoder.encode(`data: [DONE]\n\n`));
-      } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : 'Stream error';
-        await writer.write(encoder.encode(`data: ${JSON.stringify({ status: 'failed', text: message })}\n\n`));
-      } finally {
-        await writer.close();
+      } catch {
+        // Ignore malformed SSE JSON chunk
       }
-    })();
+    };
+
+    const readable = new ReadableStream<Uint8Array>({
+      async pull(controller) {
+        try {
+          const { done, value } = await reader.read();
+          if (done) {
+            if (buffer.trim()) {
+              for (const line of buffer.split(/\r?\n/)) {
+                extractAndEnqueue(line, controller);
+              }
+              buffer = '';
+            }
+            controller.enqueue(encoder.encode(`data: [DONE]\n\n`));
+            controller.close();
+            return;
+          }
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split(/\r?\n/);
+          buffer = lines.pop() || '';
+          for (const line of lines) {
+            extractAndEnqueue(line, controller);
+          }
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : 'Stream error';
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ status: 'failed', text: message })}\n\ndata: [DONE]\n\n`));
+          controller.close();
+        }
+      },
+      cancel() {
+        void reader.cancel();
+      },
+    });
 
     return new Response(readable, {
       headers: {
@@ -317,7 +444,7 @@ app.post('/v1/ai/generate', async (c) => {
 // --- GitHub Contributions ---
 app.get('/v1/github/contributions', async (c) => {
   const env = c.env;
-  const username = env.GITHUB_USERNAME || 'FIQTOR';
+  const username = env.GITHUB_USERNAME || GITHUB_USERNAME;
   const token = env.GITHUB_TOKEN;
 
   if (!token) {
@@ -367,77 +494,105 @@ app.get('/v1/github/contributions', async (c) => {
 // --- WakaTime Stats ---
 app.get('/v1/wakatime', async (c) => {
   const env = c.env;
-  const apiKey = env.WAKATIME_APP_SECRET;
+  const apiKey = env.WAKATIME_APP_SECRET?.trim().replace(/^['"]|['"]$/g, '');
+  let upstreamStatus = 0;
 
-  // 1. Try public profile stats first if available (reliable, doesn't require OAuth / plugin API key)
-  try {
-    const pubRes = await fetch('https://wakatime.com/api/v1/users/fiqtor/stats', {
-      headers: { 'User-Agent': 'PersonalWebsite/1.0' },
-    });
-    if (pubRes.ok) {
-      const pubJson = (await pubRes.json()) as {
-        data?: {
-          human_readable_total?: string;
-          human_readable_range?: string;
+  // 1. Prefer authenticated current-user API when WAKATIME_APP_SECRET is configured
+  if (apiKey) {
+    const authHeader =
+      apiKey.startsWith('Basic ') || apiKey.startsWith('Bearer ')
+        ? apiKey
+        : apiKey.startsWith('waka_tok_')
+        ? `Bearer ${apiKey}`
+        : `Basic ${btoa(apiKey)}`;
+
+    try {
+      const res = await fetch(
+        `https://wakatime.com/api/v1/users/current/all_time_since_today?api_key=${encodeURIComponent(apiKey)}`,
+        {
+          headers: { Authorization: authHeader, 'User-Agent': 'PersonalWebsite/1.0' },
+        },
+      );
+      upstreamStatus = res.status;
+
+      if (res.ok) {
+        const json = (await res.json()) as {
+          data?: { text?: string; range?: { start_text?: string } };
         };
-      };
-      if (pubJson.data?.human_readable_total) {
-        return c.json(
-          {
-            status: 200,
-            message: 'Success',
-            source: 'public_profile',
-            data: {
-              text: pubJson.data.human_readable_total,
-              range: {
-                start_text: pubJson.data.human_readable_range?.replace(/^since\s+/i, '') ?? '',
+        if (json.data?.text) {
+          return c.json(
+            {
+              status: 200,
+              message: 'Success',
+              source: 'live',
+              data: json.data,
+            },
+            200,
+            {
+              'Cache-Control': 'public, max-age=300, s-maxage=300',
+            },
+          );
+        }
+      }
+    } catch {
+      // Fall back to public profile stats below
+    }
+  }
+
+  // 2. Fall back to public profile stats if available
+  const candidateUsers = Array.from(
+    new Set([WAKATIME_USERNAME, GITHUB_USERNAME, WAKATIME_USERNAME.toLowerCase().replace(/\s+/g, '')].filter(Boolean)),
+  );
+  for (const user of candidateUsers) {
+    try {
+      const pubRes = await fetch(`https://wakatime.com/api/v1/users/${encodeURIComponent(user)}/stats`, {
+        headers: { 'User-Agent': 'PersonalWebsite/1.0' },
+      });
+      if (pubRes.ok) {
+        const pubJson = (await pubRes.json()) as {
+          data?: {
+            human_readable_total?: string;
+            human_readable_range?: string;
+          };
+        };
+        if (pubJson.data?.human_readable_total) {
+          return c.json(
+            {
+              status: 200,
+              message: 'Success',
+              source: 'public_profile',
+              data: {
+                text: pubJson.data.human_readable_total,
+                range: {
+                  start_text: pubJson.data.human_readable_range?.replace(/^since\s+/i, '') ?? '',
+                },
               },
             },
-          },
-          200,
-          {
-            'Cache-Control': 'public, max-age=1800, s-maxage=1800',
-          },
-        );
+            200,
+            {
+              'Cache-Control': 'public, max-age=1800, s-maxage=1800',
+            },
+          );
+        }
       }
+    } catch {
+      // Try next candidate
     }
-  } catch {
-    // Fall back to authenticated API if public fetch fails
   }
 
-  // 2. Fall back to current user API with API Key / OAuth Token
-  if (!apiKey) {
-    return c.json({ status: 500, message: 'WakaTime key not configured' }, 500);
-  }
-
-  const authHeader = apiKey.startsWith('Basic ') || apiKey.startsWith('Bearer ')
-    ? apiKey
-    : `Basic ${btoa(apiKey)}`;
-
-  try {
-    const res = await fetch('https://wakatime.com/api/v1/users/current/all_time_since_today', {
-      headers: { Authorization: authHeader },
-    });
-
-    if (!res.ok) throw new Error(`WakaTime API returned ${res.status}`);
-    const json = (await res.json()) as { data?: unknown };
-
-    return c.json(
-      {
-        status: 200,
-        message: 'Success',
-        source: 'live',
-        data: json.data,
-      },
-      200,
-      {
-        'Cache-Control': 'public, max-age=300, s-maxage=300',
-      },
-    );
-  } catch (err: unknown) {
-    const error = err instanceof Error ? err.message : 'Unknown error';
-    return c.json({ status: 503, message: 'WakaTime unreachable', error }, 503);
-  }
+  return c.json(
+    {
+      status: 200,
+      source: 'unavailable',
+      upstreamStatus,
+      message:
+        upstreamStatus === 401 || upstreamStatus === 403
+          ? 'WakaTime key rejected (use Personal Secret API Key from https://wakatime.com/settings/api-key, not an OAuth App Secret)'
+          : 'WakaTime stats unavailable',
+      data: null,
+    },
+    200,
+  );
 });
 
 // --- Crypto Prices ---

@@ -112,6 +112,12 @@ export default function Contact() {
     setStat(t('Opening WhatsApp with your composed message…', 'Membuka WhatsApp dengan pesan yang sudah terisi…', '正在跳转至 WhatsApp…'));
   };
 
+  const socialHandle = (url: string, prefix = '@'): string => {
+    const seg = url.replace(/\/+$/, '').split('/').pop()?.replace(/^@/, '') || '';
+    if (!seg || seg === '-') return '-';
+    return `${prefix}${seg}`;
+  };
+
   /**
    * Contact channels, most-active first. WhatsApp is the primary channel (it
    * gets answered fastest), so it is rendered as a full-width feature card;
@@ -131,17 +137,17 @@ export default function Contact() {
       name: 'WhatsApp',
       value: '+' + S.wa,
       href: `https://wa.me/${S.wa}?text=${encodeURIComponent(
-        t('Hi FIQTOR! I found your site and would like to talk about a project.', 'Halo FIQTOR! Saya dari situs Anda dan ingin membahas proyek.', '你好 FIQTOR！我浏览了你的个人网站，想探讨一个项目合作。'),
+        t(`Hi ${S.name}! I found your site and would like to talk about a project.`, `Halo ${S.name}! Saya dari situs Anda dan ingin membahas proyek.`, `你好 ${S.name}！我浏览了你的个人网站，想探讨一个项目合作。`),
       )}`,
       copy: '+' + S.wa,
       primary: true,
       note: t('Fastest reply · usually minutes · 08:00–22:00 WIB', 'Balasan tercepat · biasanya beberapa menit · 08.00–22.00 WIB', '最快回复 · 通常数分钟内 · 08:00–22:00 WIB'),
     },
     { icon: 'mail', name: 'Email', value: S.email, href: `mailto:${S.email}`, copy: S.email, note: t('Best for briefs & files', 'Cocok untuk brief & lampiran', '适合详细需求简报与附件') },
-    { icon: 'instagram', name: 'Instagram', value: '@' + S.alias.toLowerCase() + 'r', href: S.social.instagram, copy: S.social.instagram },
-    { icon: 'tiktok', name: 'TikTok', value: '@' + S.alias.toLowerCase(), href: S.social.tiktok, copy: S.social.tiktok },
-    { icon: 'github', name: 'GitHub', value: '@' + S.alias.toLowerCase(), href: S.social.github, copy: S.social.github },
-    { icon: 'linkedin', name: 'LinkedIn', value: S.alias, href: S.social.linkedin, copy: S.social.linkedin },
+    { icon: 'instagram', name: 'Instagram', value: socialHandle(S.social.instagram), href: S.social.instagram, copy: S.social.instagram },
+    { icon: 'tiktok', name: 'TikTok', value: socialHandle(S.social.tiktok), href: S.social.tiktok, copy: S.social.tiktok },
+    { icon: 'github', name: 'GitHub', value: socialHandle(S.social.github), href: S.social.github, copy: S.social.github },
+    { icon: 'linkedin', name: 'LinkedIn', value: S.owner, href: S.social.linkedin, copy: S.social.linkedin },
   ];
   const primary = channels.find((c) => c.primary)!;
   const rest = channels.filter((c) => !c.primary);

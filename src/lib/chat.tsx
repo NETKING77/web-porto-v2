@@ -107,7 +107,7 @@ const FALLBACK: [RegExp, { en: string; id: string; zh: string }][] = [
     },
   ],
   [
-    /service|layanan|jasa|iarty|build|bikin|buat|服务|定制|开发/i,
+    /service|layanan|jasa|iarty|ggstore|build|bikin|buat|服务|定制|开发/i,
     {
       en: `${S.company.name} builds web apps, AI integrations, and business systems. Automation is available too.`,
       id: `${S.company.name} membuat aplikasi web, integrasi AI, dan sistem bisnis. Otomasi juga tersedia.`,
@@ -140,9 +140,15 @@ const FALLBACK: [RegExp, { en: string; id: string; zh: string }][] = [
   ],
 ];
 
-const localAnswer = (q: string, lang: 'en' | 'id' | 'zh'): string => {
+const templateAnswer = (q: string, lang: 'en' | 'id' | 'zh'): string | null => {
   const hit = FALLBACK.find(([re]) => re.test(q));
-  if (hit) return (hit[1] as Record<string, string>)[lang] || hit[1].en;
+  if (!hit) return null;
+  return (hit[1] as Record<string, string>)[lang] || hit[1].en;
+};
+
+const localAnswer = (q: string, lang: 'en' | 'id' | 'zh'): string => {
+  const hit = templateAnswer(q, lang);
+  if (hit) return hit;
   if (lang === 'zh') return `该问题建议直接与我沟通更高效 — WhatsApp +${S.wa} 或发送邮件至 ${S.email}。`;
   return lang === 'en'
     ? `That one is quicker to answer directly — WhatsApp +${S.wa} or email ${S.email}.`
@@ -224,10 +230,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       who: 'b',
       text:
         lang === 'zh'
-          ? `你好！我是 ${S.alias} 的 AI 智能助手。你可以向我咨询服务报价、项目案例或联系方式。`
+          ? `你好！我是 ${S.name} 的 AI 智能助手。你可以向我咨询服务报价、项目案例或联系方式。`
           : lang === 'en'
-          ? `Hi! I'm ${S.alias}'s AI assistant. Ask me about services, projects, or contact details.`
-          : `Halo! Saya asisten AI ${S.alias}. Tanya soal layanan, proyek, atau kontak.`,
+          ? `Hi! I'm ${S.name}'s AI assistant. Ask me about services, projects, or contact details.`
+          : `Halo! Saya asisten AI ${S.name}. Tanya soal layanan, proyek, atau kontak.`,
     }),
     [lang],
   );
@@ -264,8 +270,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           list.map((m) => (m.id === botId ? { ...m, text: reset ? chunk : m.text + chunk, error: false } : m)),
         );
 
-      if (!isApiBaseUrlValid) {
-        append(localAnswer(q, lang));
+      const matchedTemplate = templateAnswer(q, lang);
+      if (matchedTemplate || !isApiBaseUrlValid) {
+        append(matchedTemplate ?? localAnswer(q, lang));
         setPending(false);
         return;
       }
@@ -329,6 +336,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           }
           if (evt.status === 'failed') {
             append(evt.text || localAnswer(q, lang));
+            handled = true;
             return true;
           }
           if (evt.type === 'redirectLocal' && evt.url) {

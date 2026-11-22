@@ -22,8 +22,8 @@ type Waka = { text: string; since: string };
 
 /** Fallbacks mirror `backend/src/config/social.js`; keep the two in step. */
 const SOCIAL_FALLBACK: Social = {
-  tiktok: { followers: 1952, following: 33, likes: 130000 },
-  instagram: { followers: 728, following: 579 },
+  tiktok: { followers: 0, following: 0, likes: 0 },
+  instagram: { followers: 455, following: 313 },
 };
 
 const COIN_META = [

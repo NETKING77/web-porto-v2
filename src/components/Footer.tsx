@@ -28,7 +28,7 @@ export function Footer() {
         </div>
         <div className="ft-dl">
           <span>Email</span>
-          <a href="mailto:taufiq07326@gmail.com">taufiq07326@gmail.com</a>
+          <a href={`mailto:${S.email}`}>{S.email}</a>
         </div>
         <div className="ft-dl">
           <span>{t('Location', 'Lokasi', '地址')}</span>

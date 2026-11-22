@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useNavigate, useOutlet } from 'react-router-dom';
+import { BRAND_NAME } from '../config/Identity';
 import { isReducedMotion, wait } from '../lib/utils';
 
 /* =====================================================================
@@ -377,7 +378,7 @@ export function PageShell({ children, onlyHistory = false }: { children: React.R
             {/* Just the name, set as type: centred, bold, no artwork. The
                 raster mark and the dot-matrix canvas both only delayed the
                 first paint to say what this one line says. */}
-            <b className="pt-name">FIQTOR</b>
+            <b className="pt-name">{BRAND_NAME}</b>
             <div className="pt-meta">
               <span>Loading portfolio</span>
               <b>

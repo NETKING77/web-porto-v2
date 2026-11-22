@@ -46,14 +46,16 @@ cd my-portfolio
 
 # 2 · install & configure
 npm install
-cp .env.example .env         # set VITE_DOMAIN / VITE_API_BASE_URL (no backend yet? leave defaults)
+cp .env.example .env               # frontend config (no backend yet? leave defaults)
+cp .dev.vars.example .dev.vars     # optional: local secrets for Cloudflare Pages Functions
 
 # 3 · run
-npm run dev                  # → http://localhost:5173
+npm run dev                        # → http://localhost:5173 (frontend only)
+# npm run build && npm run preview:cf  # test frontend + /api/* Pages Functions locally
 ```
 
 > **No backend? Still fine.** Every live widget (AI, stats, prices) falls back to sensible
-> local defaults, so the site looks and works complete without `VITE_API_BASE_URL`.
+> local defaults, so the site looks and works complete without `VITE_API_BASE_URL` or `.dev.vars`.
 
 ### Scripts
 
@@ -61,7 +63,9 @@ npm run dev                  # → http://localhost:5173
 | --- | --- |
 | `npm run dev` | Vite dev server with HMR |
 | `npm run build` | Typecheck (`tsc -b`) + production build → `dist/` |
-| `npm run preview` | Serve the production build locally |
+| `npm run preview` | Serve the production build locally (static only) |
+| `npm run preview:cf` | Serve `dist/` + `functions/` locally via Wrangler (loads `.dev.vars`) |
+| `npm run deploy` | Deploy `dist/` + `functions/` to Cloudflare Pages via Wrangler |
 | `npm run lint` | Lint with [oxlint](https://oxc.rs/) |
 | `npm run typecheck` | TypeScript project build, no emit |
 
@@ -118,7 +122,9 @@ navigation — edit it once.
 Both themes are plain CSS custom properties on `html[data-theme="dark"|"light"]`. Recolor the
 whole site by editing those variables — no build step, no Tailwind config.
 
-### 5 · Environment — `.env`
+### 5 · Environment — `.env` & `.dev.vars`
+
+#### Frontend — `.env` (from `.env.example`)
 
 | Variable | Purpose |
 | --- | --- |
@@ -129,7 +135,27 @@ whole site by editing those variables — no build step, no Tailwind config.
 | `VITE_GA_ID` | GA4 measurement ID override (falls back to `GA_MEASUREMENT_ID` in `Identity.ts`) |
 
 > ⚠️ **`VITE_*` values are embedded in the public bundle.** Never put secrets there — API keys,
-> tokens, and private credentials belong on the backend.
+> tokens, and private credentials belong in `.dev.vars` locally and Cloudflare Pages Secrets in production.
+
+#### Backend / Pages Functions — `.dev.vars` (from `.dev.vars.example`)
+
+Used by `wrangler pages dev` (`npm run preview:cf`) to provide runtime secrets to `functions/api/[[route]].ts` locally:
+
+```bash
+cp .dev.vars.example .dev.vars   # gitignored — never commit real keys
+npm run build && npm run preview:cf
+```
+
+| Variable | Endpoint | Default / Required | Purpose |
+| --- | --- | --- | --- |
+| `GEMINI_API_KEY` | `POST /api/v1/ai/generate` | Optional | Google Gemini API key from [AI Studio](https://aistudio.google.com/apikey) |
+| `AI_MODEL_PRIMARY` | `POST /api/v1/ai/generate` | `gemini-2.5-flash-lite` | Primary Gemini model ID override |
+| `GITHUB_TOKEN` | `GET /api/v1/github/contributions` | Optional | GitHub Personal Access Token (`read:user`) for GraphQL contributions |
+| `GITHUB_USERNAME` | `GET /api/v1/github/contributions` | `FIQTOR` | GitHub handle whose contribution calendar is fetched |
+| `WAKATIME_APP_SECRET` | `GET /api/v1/wakatime` | Optional | WakaTime secret API key (or `Basic`/`Bearer` header) as fallback |
+| `COINGECKO_API_KEY` | `GET /api/v1/crypto` | Optional | CoinGecko Demo API key (`x-cg-demo-api-key`) for higher rate limits |
+
+For **production on Cloudflare Pages**, set these same variables under **Workers & Pages → `<project>` → Settings → Variables and Secrets** (mark API keys/tokens as **Secret**). Leave any unused variable empty — every widget degrades gracefully.
 
 ### 6 · Before you publish — checklist
 
@@ -246,6 +272,8 @@ The build is a static bundle in `dist/`. Pick a host:
 `public/_headers` and `public/_redirects` are already wired. `wrangler.jsonc` and
 `functions/_middleware.js` (real 404s for missing assets) only matter if you use the
 Cloudflare CLI — update the `name` in `wrangler.jsonc` to your Pages project.
+For live `/api/v1/*` endpoints, configure the variables from `.dev.vars.example` in
+**Settings → Variables and Secrets**.
 </details>
 
 <details>

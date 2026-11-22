@@ -1,10 +1,10 @@
 export const socialConfig = {
   usernames: {
-    tiktok: "fiqtor",
-    instagram: "fiqtorr",
+    tiktok: "-",
+    instagram: "lexxy_z7",
   },
-  tiktok: { followers: 1952, following: 33, likes: 130000 },
-  instagram: { followers: 728, following: 579 },
+  tiktok: { followers: 0, following: 0, likes: 0 },
+  instagram: { followers: 455, following: 313 },
 };
 
 export default socialConfig;
