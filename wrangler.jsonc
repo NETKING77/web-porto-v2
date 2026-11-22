@@ -16,9 +16,9 @@
   // ================================================================
   "$schema": "./node_modules/wrangler/config-schema.json",
 
-  // Pages project that serves fiqtor.pages.dev, so the environment variables
+  // Pages project that serves web-porto-v2.pages.dev, so the environment variables
   // and analytics keep working.
-  "name": "fiqtor-com",
+  "name": "web-porto-v2",
 
   // Directory that Pages deploys.
   "pages_build_output_dir": "./dist",
