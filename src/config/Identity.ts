@@ -76,7 +76,7 @@ export const TWITTER_HANDLE = '@-';
 export const GA_MEASUREMENT_ID = ''; /** belum di isi */
 
 /** Canonical site origin (no trailing slash). */
-export const SITE_ORIGIN = 'https://web-porto-v2.pages.dev';
+export const SITE_ORIGIN = 'https://andrisetiyanto.my.id';
 
 /** Social profile URLs. */
 export const SOCIAL_LINKS = {
