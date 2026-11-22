@@ -7,14 +7,35 @@ import Home from './pages/Home';
 import Projects from './pages/Projects';
 import Career from './pages/Career';
 import Upclose404 from './components/Upclose404';
+import MaintenancePage from './maintenance/MaintenancePage';
+import { isMaintenanceActive } from './maintenance/config';
+import { LanguageProvider } from './lib/catalog';
+import { ThemeProvider } from './lib/theme';
 import './styles/site.css';
 
 /**
  * Route table. `/kanban` deliberately does not exist in v3.
  * `lazy` keeps heavy pages (the certificate grid with 31 images, the contact
  * form with reCAPTCHA) out of the initial bundle.
+ *
+ * When `MAINTENANCE_CONFIG.enabled` (or `VITE_MAINTENANCE_MODE=true`) is on,
+ * every route renders `<MaintenancePage />`. Otherwise `/maintenance` stays
+ * directly accessible for preview.
  */
-const router = createBrowserRouter([
+const maintenanceRoutes = [
+  {
+    path: '*',
+    element: (
+      <ThemeProvider>
+        <LanguageProvider>
+          <MaintenancePage />
+        </LanguageProvider>
+      </ThemeProvider>
+    ),
+  },
+];
+
+const appRoutes = [
   {
     path: '/',
     element: <Layout />,
@@ -39,8 +60,20 @@ const router = createBrowserRouter([
       },
     ],
   },
+  {
+    path: '/maintenance',
+    element: (
+      <ThemeProvider>
+        <LanguageProvider>
+          <MaintenancePage />
+        </LanguageProvider>
+      </ThemeProvider>
+    ),
+  },
   { path: '*', element: <Upclose404 /> },
-]);
+];
+
+const router = createBrowserRouter(isMaintenanceActive() ? maintenanceRoutes : appRoutes);
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

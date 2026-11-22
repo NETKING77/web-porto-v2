@@ -57,12 +57,12 @@ export const CONTACT_EMAIL = 'andrisetiyanto18@gmail.com';
 export const BUSINESS_EMAIL = 'andrisetiyanto18@gmail.com';
 
 /** Public phone (E.164). */
-export const CONTACT_PHONE = '+6281617262908';
+export const CONTACT_PHONE = '+6287713349338';
 /** WhatsApp number without the "+" (for wa.me links). */
-export const WHATSAPP_NUMBER = '6281617262908';
+export const WHATSAPP_NUMBER = '6287713349338';
 
 /** X / Twitter handle. */
-export const TWITTER_HANDLE = '@fiqtor';
+export const TWITTER_HANDLE = '@-';
 
 /**
  * Canonical Google Analytics 4 measurement ID.
@@ -73,10 +73,10 @@ export const TWITTER_HANDLE = '@fiqtor';
  * inert: the value is injected into `<head>` by `src/config/Seo.ts` and loaded
  * by `src/lib/analytics.ts`. Set `VITE_GA_ID=` to an empty string to disable.
  */
-export const GA_MEASUREMENT_ID = 'G-'; /** belum di isi */
+export const GA_MEASUREMENT_ID = ''; /** belum di isi */
 
 /** Canonical site origin (no trailing slash). */
-export const SITE_ORIGIN = 'https://fiqtor.pages.dev';
+export const SITE_ORIGIN = '';
 
 /** Social profile URLs. */
 export const SOCIAL_LINKS = {
@@ -100,10 +100,10 @@ export const TIMEZONE_LABEL = 'WIB';
 
 /** Resume PDF paths (served from /public). */
 export const RESUME = {
-  creativeEn: '/pdf/Taufiiqul_Hakim-Creative_Resume-en.pdf',
-  creativeId: '/pdf/Taufiiqul_Hakim-Creative_Resume-id.pdf',
-  atsEn: '/pdf/Taufiiqul_Hakim-Resume-en.pdf',
-  atsId: '/pdf/Taufiiqul_Hakim-Resume-id.pdf',
+  creativeEn: '/pdf/',
+  creativeId: '/pdf/',
+  atsEn: '/pdf/',
+  atsId: '/pdf/',
 } as const;
 
 /** Portrait image path. */

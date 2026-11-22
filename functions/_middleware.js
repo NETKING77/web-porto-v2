@@ -96,9 +96,7 @@ function isHtmlShell(response) {
  * before the clean-URL redirect is ever applied. Keep the body byte-identical
  * to the file in `public/`; if Google reissues the token, update both.
  */
-const SEARCH_CONSOLE_FILES = {
-  '/googled903a8563115dfcf.html': 'google-site-verification: googled903a8563115dfcf.html',
-};
+const SEARCH_CONSOLE_FILES = {};
 
 export async function onRequest(context) {
   const { pathname } = new URL(context.request.url);

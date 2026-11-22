@@ -104,6 +104,38 @@ const ALLOWED_MIME_TYPES = new Set([
 
 const MAX_BASE64_LENGTH = 10 * 1024 * 1024; // ~7.5MB decoded
 
+function cleanModelId(raw?: string): string {
+  return (raw ?? '')
+    .trim()
+    .replace(/^['"]|['"]$/g, '')
+    .replace(/^models\//i, '')
+    .toLowerCase()
+    .replace(/\s+/g, '-');
+}
+
+function extractGoogleError(rawText: string): string {
+  try {
+    const parsed = JSON.parse(rawText) as { error?: { message?: string } | Array<{ error?: { message?: string } }> };
+    if (Array.isArray(parsed)) return parsed[0]?.error?.message ?? '';
+    return (parsed.error as { message?: string } | undefined)?.message ?? '';
+  } catch {
+    return rawText.slice(0, 160);
+  }
+}
+
+function scoreModel(id: string): number {
+  if (id === 'gemini-3.5-flash-lite') return 1000;
+  if (id === 'gemini-flash-lite-latest') return 950;
+  const verMatch = id.match(/gemini-(\d+(?:\.\d+)?)/);
+  const ver = verMatch ? parseFloat(verMatch[1]) : id.includes('latest') ? 3.5 : 1.0;
+  let score = ver * 100;
+  if (/flash/i.test(id)) score += 30;
+  if (/lite/i.test(id) && ver >= 3) score += 25;
+  if (!/exp|001|002|8b|customtools|preview/i.test(id)) score += 15;
+  if (/latest$/i.test(id)) score += 20;
+  return score;
+}
+
 app.post('/v1/ai/generate', async (c) => {
   const origin = c.req.header('origin');
   if (origin) {
@@ -183,14 +215,6 @@ app.post('/v1/ai/generate', async (c) => {
     );
   }
 
-  const cleanModelId = (raw?: string): string =>
-    (raw ?? '')
-      .trim()
-      .replace(/^['"]|['"]$/g, '')
-      .replace(/^models\//i, '')
-      .toLowerCase()
-      .replace(/\s+/g, '-');
-
   const configuredModel = cleanModelId(env.AI_MODEL_PRIMARY);
   const primaryModel =
     /^[a-z0-9][a-z0-9._-]*$/.test(configuredModel) && configuredModel !== 'gemini-2.5-flash-lite'
@@ -268,29 +292,6 @@ app.post('/v1/ai/generate', async (c) => {
       },
     );
 
-  const extractGoogleError = (rawText: string): string => {
-    try {
-      const parsed = JSON.parse(rawText) as { error?: { message?: string } | Array<{ error?: { message?: string } }> };
-      if (Array.isArray(parsed)) return parsed[0]?.error?.message ?? '';
-      return (parsed.error as { message?: string } | undefined)?.message ?? '';
-    } catch {
-      return rawText.slice(0, 160);
-    }
-  };
-
-  const scoreModel = (id: string): number => {
-    if (id === 'gemini-3.5-flash-lite') return 1000;
-    if (id === 'gemini-flash-lite-latest') return 950;
-    const verMatch = id.match(/gemini-(\d+(?:\.\d+)?)/);
-    const ver = verMatch ? parseFloat(verMatch[1]) : id.includes('latest') ? 3.5 : 1.0;
-    let score = ver * 100;
-    if (/flash/i.test(id)) score += 30;
-    if (/lite/i.test(id) && ver >= 3) score += 25;
-    if (!/exp|001|002|8b|customtools|preview/i.test(id)) score += 15;
-    if (/latest$/i.test(id)) score += 20;
-    return score;
-  };
-
   try {
     let upstreamRes = await callGeminiStream(primaryModel);
     let lastStatus = upstreamRes.status;
@@ -327,7 +328,7 @@ app.post('/v1/ai/generate', async (c) => {
               )
               .map((m) => m.name!.replace(/^models\//, ''))
               .filter((m) => m !== primaryModel)
-              .sort((a, b) => scoreModel(b) - scoreModel(a));
+              .toSorted((a, b) => scoreModel(b) - scoreModel(a));
             if (discovered.length > 0) {
               fallbackCandidates = Array.from(new Set([...discovered.slice(0, 4), ...fallbackCandidates])).slice(0, 4);
             }

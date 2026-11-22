@@ -15,6 +15,12 @@ import { useUI } from '../lib/ui';
 
 type Status = 'idle' | 'sending' | 'success' | 'error';
 
+function socialHandle(url: string, prefix = '@'): string {
+  const seg = url.replace(/\/+$/, '').split('/').pop()?.replace(/^@/, '') || '';
+  if (!seg || seg === '-') return '-';
+  return `${prefix}${seg}`;
+}
+
 export default function Contact() {
   const ref = useReveal();
   const { lang } = useLanguage();
@@ -110,12 +116,6 @@ export default function Contact() {
     window.open(waUrl, '_blank', 'noopener,noreferrer');
     setStatus('success');
     setStat(t('Opening WhatsApp with your composed message…', 'Membuka WhatsApp dengan pesan yang sudah terisi…', '正在跳转至 WhatsApp…'));
-  };
-
-  const socialHandle = (url: string, prefix = '@'): string => {
-    const seg = url.replace(/\/+$/, '').split('/').pop()?.replace(/^@/, '') || '';
-    if (!seg || seg === '-') return '-';
-    return `${prefix}${seg}`;
   };
 
   /**
