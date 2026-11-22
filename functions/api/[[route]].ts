@@ -145,6 +145,8 @@ app.post('/v1/ai/generate', async (c) => {
         hostname === 'localhost' ||
         hostname === '127.0.0.1' ||
         hostname.endsWith('.pages.dev') ||
+        hostname === 'andrisetiyanto.my.id' ||
+        hostname.endsWith('.andrisetiyanto.my.id') ||
         hostname === 'fiqtor.com' ||
         hostname.endsWith('.fiqtor.com');
       if (!isAllowedHost) {
