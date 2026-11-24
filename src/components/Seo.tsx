@@ -57,7 +57,7 @@ export function Seo() {
           signal for a single-document site is simply to omit it. */}
       <link rel="alternate" hrefLang="x-default" href={canonical} />
 
-      <meta property="og:type" content={route.path === '/' ? 'profile' : 'website'} />
+      <meta property="og:type" content="website" />
       <meta property="og:site_name" content={cfg.brand} />
       <meta property="og:url" content={canonical} />
       <meta property="og:title" content={route.title} />
